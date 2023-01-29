@@ -7,7 +7,17 @@
 		<div style="display: grid; grid-template-columns: auto auto auto;">
 			<div class="dataColumn">
 				<h2>User</h2>
-				 <textarea name="user_name" id="note" class="form-control userInput"></textarea>
+				 <select name ="user_name">
+           <option value = "null">
+             --Please Select--
+           </option>
+           {% for user in users %}
+           <option value = "{{user}}">
+             {{user}}
+           </option>
+           {% endfor %}
+         </select>
+        
 			</div>
 			<div class="dataColumn">
 				<h2>Expense</h2>
@@ -22,14 +32,51 @@
       <button type="submit" class="btn btn-primary">Add Transaction</button>
     </div>
 	</form>
-  <ul class="list-group list-group-flush" id="notes">
-    {% for note in user.notes %}
+	<ul class="list-group list-group-flush" id="transactions">
+    {% for tx in user.transactions %}
     <li class="list-group-item">
-      {{ note.data }}
-      <button type="button" class="close" onClick="deleteNote({{ note.id }})">
+      {{tx.name}} paid ${{'%0.2f'| format(tx.cost|float)}} for {{tx.remarks}}
+      <button type="button" class="close" onClick="deleteTransaction({{ tx.id }})">
         <span aria-hidden="true">&times;</span>
       </button>
     </li>
     {% endfor %}
   </ul>
+  <div class="w3-bar w3-black">
+    <!--looping name through the people's name-->
+    {% for name in payments %}
+    <button class="w3-bar-item w3-button" onclick="openPeople('{{name}}')">{{name}}</button>
+    {% endfor %}
+  </div>
+
+  {% for selectedPerson in payments %}
+  <!-- each person's payments is as follows:
+  
+    "Sam": {
+      "Tze Zhao": 5 # this means that "Sam" has to pay "Tze Zhao" $5
+      "Kar Jun": -10 # this means that "Sam" can expect "Kar Jun" to pay him $10 
+    }
+    
+-->
+  <div id="{{selectedPerson}}" class="w3-container people">
+    <!-- draw value from key -->
+    {% set indivPayments = payments[selectedPerson] %}
+    <!-- indviPayments is:
+      {
+        "Tze Zhao": 5 # this means that "Sam" has to pay "Tze Zhao" $5
+        "Kar Jun": -10 # this means that "Sam" can expect "Kar Jun" to         pay him $10
+      }
+    -->
+    {% for otherPerson in indivPayments %}
+    
+      {% set value = indivPayments[otherPerson] %}
+      <!-- check if owe or receive -->
+      {% if value > 0 %}
+        <p>{{selectedPerson}} owes {{otherPerson}} ${{'%0.2f'| format(value|float)}}</p>
+      {% else %}
+        <p>{{selectedPerson}} should receive ${{'%0.2f'| format(value|float)}} from {{otherPerson}}</p>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
   {% endblock %}
