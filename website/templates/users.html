@@ -1,21 +1,21 @@
-{% extends "base.html" %} {% block title %}Home{% endblock %} {% block content
+{% extends "base.html" %} {% block title %}Users{% endblock %} {% block content
   %}
 
   <h1 align="center">Users</h1>
 	
+  <form method="POST">
 		<div style="display: grid; grid-template-columns: auto auto auto;">
 			<div class="dataColumn">
 			</div>
 			<div class="dataColumn">
-				<textarea name="expense" id="new_user" class="form-control userInput"></textarea>
+				<input name="new_user" id="new_user" class="form-control userInput">
 			</div>
 			<div class="dataColumn">
 			</div>
 		</div>
 		<div align="center">
-      <button class="btn btn-primary" onclick="addUser(document.getElementById('new_user').value)">Add User</button>
+      <button type="submit" class="btn btn-primary">Add User</button>
     </div>
-  <form method="POST">
   	<ul class="list-group list-group-flush" id="users">
       {% for user in users %}
       <li class="list-group-item" id="{{user}}">
@@ -28,7 +28,8 @@
       {% endfor %}
     </ul>  
     <div align="center">
-      <button class="btn btn-primary" type="submit">COOK</button>
+      <button class="btn btn-primary"><a href="/">Done</a></button>
     </div>
+    
 	</form>
   {% endblock %}

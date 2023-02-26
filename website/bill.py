@@ -27,7 +27,7 @@ def calculate(transactions, users):
       paymentByEachUser[currentUser] = 0
     #tie the cost to the user
     paymentByEachUser[currentUser] += tx["cost"]
-
+  #even if user did not pay for anything, have to add user to count so set value of that user paid to 0
   for user in users:
     if user not in paymentByEachUser:
       paymentByEachUser[user] = 0
@@ -42,20 +42,15 @@ def calculate(transactions, users):
   # BILL SPLITTING
 
   # sort by ascending
-  tuplesArray = []
-  for key, val in paymentByEachUser.items():
-    tuplesArray.append((val, key))
-  tuplesArray.sort()
+  tuplesArray = sorted(paymentByEachUser.items(), key=lambda x: x[1])
   
   # normalize deducting costPerUser
-  paidArray = [tup[0] - costPerUser for tup in tuplesArray]
+  paidArray = [tup[1] - costPerUser for tup in tuplesArray]
   #to allow drawing of name of the keys in the dict
-  names = [tup[1] for tup in tuplesArray]
+  names = [tup[0] for tup in tuplesArray]
   #["Sam", "TZ", "KJ"]
 
-  bill = {}
-  for name in names:
-    bill[name] = {}
+  bill = {name:{} for name in names}
   # [{}, {"Sam":5}, {"Sam": 10, "TZ":8}]
 
   payeeIdx = 0

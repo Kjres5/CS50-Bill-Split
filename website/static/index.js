@@ -12,35 +12,37 @@ function openPeople(peopleName) {
   var i;
   var x = document.getElementsByClassName("people");
   for (i = 0; i < x.length; i++) {
-    x[i].style.display = "none";  
+    x[i].style.display = "none";
   }
-  document.getElementById(peopleName).style.display = "block";  
+  document.getElementById(peopleName).style.display = "block";
+  for(const el of document.getElementsByClassName("people-tabs")){
+    el.classList.remove("active");
+  }
+  document.getElementById("tab_"+peopleName).classList.add("active");
 }
-
-function addUser(name){
-  document.getElementById("new_user").value = "";
-  let el = document.createElement("li");
-  el.classList.add("list-group-item");
-  el.id = name;
-  let close_btn = document.createElement("button");
-  close_btn.classList.add("close");
-  close_btn.setAttribute("type", "button");
-  close_btn.addEventListener("click", (e)=>deleteUser(name));
-  close_btn.innerHTML = '<span aria-hidden="true">&times;</span>';
-  let sp = document.createElement("span");
-  sp.innerHTML = name;
-  el.appendChild(sp);
-  el.appendChild(close_btn);
-  let inp = document.createElement("input");
-  inp.setAttribute("name", "users");
-  inp.setAttribute("value", name);
-  inp.style = "display: none";
-  el.appendChild(inp);
-  document.getElementById("users").appendChild(el);
-}
-
 
 function deleteUser(name){
-  document.getElementById(name).remove();
+  console.log("DELETING IN JS")
+  fetch("/delete-user", {
+    method: "POST",
+    body: JSON.stringify({ user_name: name }),
+  }).then((_res) => {
+    window.location.href = "/users";
+  });
 }
 
+function copyText(elementId){
+  var el = document.getElementById(elementId);
+  
+  let text_to_copy = el.innerText.slice(0, -4).trim();
+
+  // Copy the text inside the text field
+  navigator.clipboard.writeText(text_to_copy);
+  
+  fetch("/flash-copied-text", {
+    method: "POST",
+    body: JSON.stringify({ text: text_to_copy }),
+  }).then((_res) => {
+    window.location.href = "/";
+  });
+}

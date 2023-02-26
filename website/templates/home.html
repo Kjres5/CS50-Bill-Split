@@ -45,7 +45,7 @@
   <div class="w3-bar w3-black">
     <!--looping name through the people's name-->
     {% for name in payments %}
-    <button class="w3-bar-item w3-button" onclick="openPeople('{{name}}')">{{name}}</button>
+    <button id="tab_{{name}}" class="w3-bar-item w3-button people-tabs" onclick="openPeople('{{name}}')">{{name}}</button>
     {% endfor %}
   </div>
 
@@ -74,9 +74,18 @@
       {% if value > 0 %}
         <p>{{selectedPerson}} owes {{otherPerson}} ${{'%0.2f'| format(value|float)}}</p>
       {% else %}
-        <p>{{selectedPerson}} should receive ${{'%0.2f'| format(value|float)}} from {{otherPerson}}</p>
+        {% set val_str = '%0.2f'| format(value|float) %}
+        <p>{{selectedPerson}} should receive ${{val_str[1:]}} from {{otherPerson}}</p>
       {% endif %}
     {% endfor %}
+    <div>
+      <button onclick="copyText('{{selectedPerson}}')">Copy</button>
+    </div>
   </div>
   {% endfor %}
+  {% if payments %}
+  <script>
+    window.onload = function(){openPeople("{{payments.keys()[0]}}")}
+  </script>
+  {% endif %}
   {% endblock %}

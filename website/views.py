@@ -1,9 +1,19 @@
 from flask import Blueprint, render_template, request, flash, jsonify, session, redirect
 from flask_login import login_required, current_user
-from .models import Note, Transaction
+from .models import Transaction, User
 from . import db
 import json
 from .bill import calculate
+import re
+
+def valid_dollar_amount(amt_str):
+  if re.match("\d+(.\d+)?", amt_str):
+    # checks for "X" or "X.X+" with minimum of 1 digit after period
+    return True
+  if re.match("\.\d+(\d+)?", amt_str):
+    # checks for ".X+" with minimum of 1 digit after period
+    return True
+  return False
 
 views = Blueprint('views', __name__)
 
@@ -11,28 +21,44 @@ views = Blueprint('views', __name__)
 @login_required
 def users():
   if request.method == 'POST':
-    users = request.form.getlist('users')
-    session["users"] = users
-    return redirect("/")
-  users = session.get("users")
-  if users is None: 
+    user = request.form.get('new_user')
+    if len(user.strip()) > 0:
+      friends = current_user.friends
+      if len(friends) > 0: 
+        friends += ","
+      friends += user.strip()
+      current_user.friends = friends
+      db.session.commit()
+    else:
+      flash(' Please input user', category='error')
+    
+  if len(current_user.friends) == 0:
     users = list()
+  else:
+    users = current_user.friends.split(",")
   return render_template("users.html", user=current_user, users = users)
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required 
 def home():
-  users = session.get("users")
-  if users is None or users == []:
+  if len(current_user.friends) == 0:
     flash('Please input user', category='error')
     return redirect('/users')
+  users = current_user.friends.split(",")
   if request.method == 'POST':
     name = request.form.get("user_name")
     expense = request.form.get("expense")
-    cost = request.form.get("cost")
-    if not cost.isnumeric():
+    cost_str = request.form.get("cost")
+
+    if name not in users:
+      flash('Please select valid payer using the dropdown', category='error')
+      return render_template("home.html", user=current_user, users = users)
+
+    # checks if cost fits decimal
+    if not valid_dollar_amount(cost_str):
       flash('Cost is not numeric', category='error')  
       return render_template("home.html", user=current_user, users = users)
+    cost = cost_str
     if expense == "":
       flash('Please input expense', category='error')
       return render_template("home.html", user=current_user, users = users)
@@ -63,7 +89,7 @@ def home():
       "cost": tx.cost
     }
     transaction_list.append(new_tx)
-  new_bill = calculate(transaction_list, session.get("users")) if len(transaction_list) > 0 else {}
+  new_bill = calculate(transaction_list, users) if len(transaction_list) > 0 else {}
 
   return render_template("home.html", user=current_user, payments = new_bill, users = users)
 
@@ -80,3 +106,28 @@ def delete_transaction():
       db.session.commit()
 
     return jsonify({})
+
+@views.route('/delete-user', methods=['POST'])
+def delete_user():
+  print("deleting user now")
+  if len(current_user.friends) == 0:
+    users = list()
+  else:
+    users = current_user.friends.split(",")
+  data = json.loads(request.data)
+
+  try:
+    users.remove(data["user_name"])
+    current_user.friends = ",".join(users)
+    db.session.commit()
+  except ValueError:
+    flash("User doesn't exist", category="error")
+
+  return jsonify({})
+
+
+@views.route('/flash-copied-text', methods=['POST'])
+def flash_copied_text():
+  flash("Copied! Share now!", category="success")
+
+  return jsonify({})
